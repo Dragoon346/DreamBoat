@@ -33,11 +33,11 @@ public class GeneralPlayerScript : MonoBehaviour
         {
             jumpHeight = 0f;// set   jump height to 0
             StopCoroutine("gravitySpeed");//stops adding speed to gravity when you touch the ground
-            gravity = 9.8f;// resets gravity to 1500 u/s 
+            gravity = 9.8f;// resets gravity to 9.8 u/s 
             if (Input.GetKey(KeyCode.Space))// if you press space while grounded
             {
                 Debug.Log("jump attempted");//console message telling me when I attempt to jump
-                StartCoroutine("jumping");
+                StartCoroutine("jumping");//starts a coroutine for jumping
             }
         }
         if (playercon.isGrounded == false)//if the player is not touching a surface with collision
@@ -48,7 +48,7 @@ public class GeneralPlayerScript : MonoBehaviour
     private IEnumerator gravitySpeed()
     {
         yield return new WaitForSecondsRealtime(0.0166f);//waits for 60th of a second realtime
-        gravity = gravity + 0.163f;// adds ((change in time since last frame update)+gravity) to gravity every 60th of a second for as long as the player is not grounded
+        gravity = gravity + 0.163f;// adds (1/60)gravity to gravity every 60th of a second for as long as the player is not grounded
     }
     private IEnumerator jumping()
     {
@@ -56,7 +56,7 @@ public class GeneralPlayerScript : MonoBehaviour
         jumpHeight = 10f;//sets jumpHeight to 10
         yield return new WaitForSecondsRealtime(0.25f);//waits for a quarter of a second realtime
         jumpHeight = 9.9f;//sets jumpHeight to 9.9
-        gravity = 9.8f; //sets gravity to 1 for a slower decline
+        gravity = 9.8f; //sets gravity to 9.8
     }
     void OnCollisionEnter(Collision collisionInfo)//Updates when you begin to touch something
     {
