@@ -7,34 +7,34 @@ public class GeneralPlayerScript : MonoBehaviour
     public Camera Camera; //reference to the camera
     public CharacterController playercon; // reference to the player character
     public GameObject player; //reference to the player's gameobject(used to destroy it later)
-    public float yrotation = 60.0f; // speed multiplier for y axis rotation
-    public float xrotation = 60.0f; // speed multiplier for x axis rotation
+    public float xrotation; // speed multiplier for x axis rotation
     public float forwards = 7f;// speed multiplier for moving forwards
     public float backwards = -6f;// speed multiplier for moving backwards
     public float strafe = 7f;// speed multiplier for moving	left or right
     public bool isGrounded = false;//useless bool value that I can't get to function, not really needed, but it would be help to figure out any issues with movement/gravity
     public bool running;
+    public float sensitivity = 1f;
+    public float yrotation;
     public float jumpHeight = 0f;// base height for jumping, to be used in either a move function, or a lerped translate
     public float speed = 10f;//base speed multiplier for player movement
     public float gravity = 9.8f;//base speed for gravity
     private Vector3 move = Vector3.zero;//resets motion to zero
     public CapsuleCollider playercollider;// reference to a capsule collider on the player if I ever decide to add one for calculating forces and stuff
     
-   void Update ()// Update is called once per frame
+   void Update () // Update is called once per frame
     {
-        float y = -yrotation * Input.GetAxis("Mouse Y");// sets the float y to use the same value as yrotation and then multiplies that by the movement of the y axis of the mouse
-        float x = xrotation * Input.GetAxis("Mouse X");// sets the float x to use the same value as xrotation and then multiplies that by the movement of the x axis of the mouse
-        move = new Vector3(Input.GetAxis("Strafe"), 0, Input.GetAxis("Forwards")); //creates a new Vector3 for the values of movement
-
+        
+        // sets the float y to use the same value as yrotation and then multiplies that by the movement of the y axis of the mouse
+        xrotation += Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;// sets the float x to use the same value as xrotation and then multiplies that by the movement of the x axis of the mouse
+        move = new Vector3(Input.GetAxis("Strafe") * speed, 0, Input.GetAxis("Forwards") * speed); //creates a new Vector3 for the values of movement
         move = transform.TransformDirection(move); //this basically isolates the movement to axes relative to the player instead of world axes
-
-        move = move * speed; //multiplies the value of move by the multiplier for player's speed
+        yrotation += Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime;
+        yrotation = Mathf.Clamp(yrotation, -80f, 90f);
 
         move.y = move.y + (jumpHeight - gravity);//moves the player down by gravity multiplied by Time.deltaTime
 
-        Camera.transform.Rotate(- y * Time.deltaTime, 0, 0);//rotates vertical rotation of the camera but not the character
-
-        playercon.transform.Rotate(0, x * Time.deltaTime, 0);// rotates the character and the camera horizontally, because the camera is a child of the character
+        Camera.transform.rotation = Quaternion.Euler(-yrotation, xrotation, 0f);//rotates vertical rotation of the camera but not the character
+        playercon.transform.rotation = Quaternion.Euler(0f, xrotation, 0f);// rotates the character and the camera horizontally, because the camera is a child of the character
         playercon.Move(move * Time.deltaTime * speed);// Moves the player. Movement is equal to base move speed * Time.deltaTime * the speed multiplier 
         Cursor.lockState = CursorLockMode.Locked;//locks the cursor
         Cursor.visible = false;//hides the cursor
@@ -48,18 +48,18 @@ public class GeneralPlayerScript : MonoBehaviour
         }
         if (running == false)//if not running
         {
-            speed = 7f;//sets speed to 5
+            speed = 10f; //sets speed to 9
         }
         if (running == true)//if running
         {
-            speed = 10f;//sets speed to 10
+            speed = 25f; //sets speed to 15
         }
        
         if (playercon.isGrounded == true)//if the player is resting on a surface with a collider
         {
             jumpHeight = 0f;// set   jump height to 0
             StopCoroutine("gravitySpeed");//stops adding speed to gravity when you touch the ground
-            gravity = 9.8f;// resets gravity to 1500 u/s 
+            gravity = 9.8f;// resets gravity to 9.8 u/s 
             if (Input.GetKey(KeyCode.Space))// if you press space while grounded
             {
                 Debug.Log("jump attempted");//console message telling me when I attempt to jump
@@ -75,8 +75,10 @@ public class GeneralPlayerScript : MonoBehaviour
             Application.Quit();// quits the game
         }
     }
-    
-
+    private void LateUpdate()
+    {
+        
+    }
     private IEnumerator gravitySpeed()
     {
         yield return new WaitForSecondsRealtime(0.0167f);//waits for 60th of a second realtime
@@ -84,14 +86,13 @@ public class GeneralPlayerScript : MonoBehaviour
     }
     private IEnumerator jumping()
     {
-        gravity = 0f;//sets gravity to 0 at the start of the jump
-        jumpHeight = 9f;//sets jumpHeight to 10
-        yield return new WaitForSecondsRealtime(0.3f);//waits for a quarter of a second realtime
- 
-         jumpHeight = 13;//sets jumpHeight to 9.9
+        gravity = 4f;//sets gravity to 0 at the start of the jump
+        jumpHeight = 9.8f;//sets jumpHeight to 10
+        yield return new WaitForSecondsRealtime(0.1f);//waits for a quarter of a second realtime
+        jumpHeight = 13;//sets jumpHeight to 9.9
         gravity = 9.8f; //sets gravity to 1 for a slower decline
     }
-    void OnCollisionEnter(Collision collisionInfo)//Updates when you begin to touch something
+    private void OnCollisionEnter(Collision collisionInfo)//Updates when you begin to touch something
     {
         Debug.Log("collisionInfo.gameObject.tag");//returns the tag of what you collide with
         if (collisionInfo.gameObject.tag == "ground")// if you collide with the ground
@@ -99,7 +100,7 @@ public class GeneralPlayerScript : MonoBehaviour
             isGrounded = true;//you are grounded, unsure if keeping the isGrounded boolean would change anything or not because the player controller already has its own private grounded bool, but whatever
         }
     }
-    void OnCollisionExit(Collision collisionInfo)// updates when you stop touching a collider
+    private void OnCollisionExit(Collision collisionInfo)// updates when you stop touching a collider
     {
         Debug.Log("collisionInfo.gameObject.tag");//tells you what you stopped touching
         if (collisionInfo.gameObject.tag == "ground")//if you stop touching the ground
